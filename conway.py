@@ -1,3 +1,6 @@
+import pprint
+import __main__
+import re, os, sys, time
 
 class universe:
     w = 0
@@ -17,6 +20,7 @@ class universe:
             self.uniList[pos[1]][pos[0]] = 1
     
     def show(self):
+        os.system("cls")
         for row in self.uniList:
             for i in row:
                 if i == 0:
@@ -25,7 +29,30 @@ class universe:
                     print("X     ", end="")
             print("\n")
     
-    def output(self):
+    def showStats(self):
+        print(f"Width: {self.w}\tHeight: {self.h}\nGenerations: {self.generations}\tLivingCellCount: {self.living_Cells}\nLivingCellPos:\n{self.living_Cell_Pos}")
+
+    def inputFile(self, filePath: str = "output.txt"):
+        with open(filePath, "r") as txt:
+            line1 = txt.readline().split(" ") # width height
+            for i in range(len(line1)):
+                line1[i] = int(line1[i])
+            self.w = line1[0]
+            self.h = line1[1]
+
+            line2 = int(txt.readline()) # Generations
+            self.generations = line2
+
+            line3 = int(txt.readline()) # Living cells
+            self.living_Cells = line3
+
+            line4 = txt.readline().split("],") # Alive coords
+            self.living_Cell_Pos.clear()
+            for i in range(len(line4)):
+                line4[i] = re.sub("[,\[\] ]", "", line4[i])
+                self.living_Cell_Pos.append([int(line4[i][0]),int(line4[i][1])])
+            
+    def outputFile(self):
         with open("output.txt", "w") as txt:
             livingCellPos = f"{self.living_Cell_Pos}"
             livingCellPos = livingCellPos[1:-1]
@@ -34,32 +61,85 @@ class universe:
     def detect(self, x, y) -> int:
         alive = 0
         thingsToProcess = [[x-1, y-1], [x, y-1], [x+1, y-1],
-                           [x-1, y], [x, y], [x+1, y],
+                           [x-1, y], [x+1, y],
                            [x-1, y+1], [x, y+1], [x+1, y+1]]
+
         for pos in thingsToProcess:
-            if not (pos[0] <= -1 or pos[1] <= -1):
+            if not ((pos[0] <= -1 or pos[1] <= -1) or (pos[0] >= self.w or pos[1] >= self.h)):
                 if self.uniList[pos[1]][pos[0]] == 1:
                     alive += 1
+        return alive
+    
+    def rules(self, aliveCount: int, alive: bool) -> int: # Using living cell count and uses conways rules to determine if cell lives (1) or dies (0)
+        if alive and aliveCount < 2:
+            return 0
+        if alive and aliveCount > 3:
+            return 0
+        if aliveCount == 3:
+            return 1
+        if not alive:
+            return 0
+        if alive:
+            return 1
 
-    def startGenerations(self, generation: int):
+    def startGenerations(self, generation: int, display: bool = False, speed: float = .2):
         for i in range(generation):
 
-            toLive = []
-            toDie = []
-            
-            for i in range(self.uniList):
-                for j in range(i):
+            if display:
+                self.show()
+                self.showStats()
+                time.sleep(speed)
+
+            uniListUpdates = [[0 for _ in range(self.w)] for _ in range(self.h)]
+            for y in range(self.h):
+                for x in range(self.w):
                     # Detect what cells live or die and update lists, then after, complete list conversion to update death and life
-                    pass
+                    detected = self.detect(x, y)
+                    currentCell = self.rules(detected, self.uniList[y][x]==1)
+
+                    if currentCell == 1: # Alive
+                        if not self.living_Cell_Pos.__contains__([x,y]):
+                            self.living_Cell_Pos.append([x,y])
+                            self.living_Cells += 1
+                    else: # Dead
+                        if self.living_Cell_Pos.__contains__([x,y]):
+                            self.living_Cell_Pos.remove([x,y])
+                            self.living_Cells -= 1
+
+                    uniListUpdates[y][x] = currentCell
+            self.uniList = uniListUpdates
+            self.generations += 1
 
 
-            pass
-        
+if __name__ == "__main__":
+    args = sys.argv
 
+    display = False
+    save = False
+    outputFile = "output.txt"
+    inputFile = "output.txt"
+    generations = 10
 
+    for arg in args: # Check and parse cmd arguments
+        match arg:
+            case "--save":
+                save = True
+            case "--graphics":
+                display = True
+            case "--output":
+                outputFile = args[args.index("--output") + 1] 
+                save = True
+            case "--input":
+                inputFile = args[args.index("--input") + 1]
+            case "--gen":
+                generations = int(args[args.index("--gen") + 1])
+    
+    # print(f"display: {display}, output: {outputFile}, input: {inputFile}, gens: {generations}")
 
-uni1 = universe()
-uni1.show()
-uni1.output()
+    uni1 = universe() #Init default
+    uni1.startGenerations(generations, True)
+    
+    if save:
+        uni1.outputFile()
 
 # Haskell check it out, OCaml for functional programming
