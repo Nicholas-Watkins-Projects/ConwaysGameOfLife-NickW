@@ -30,30 +30,33 @@ class universe:
             print("\n")
     
     def showStats(self):
-        print(f"Width: {self.w}\tHeight: {self.h}\nGenerations: {self.generations}\tLivingCellCount: {self.living_Cells}\nLivingCellPos:\n{self.living_Cell_Pos}")
+        print(f"Width: {self.w}\tHeight: {self.h}\nGenerations: {self.generations+1}\tLivingCellCount: {self.living_Cells}\nLivingCellPos:\n{self.living_Cell_Pos}")
 
     def inputFile(self, filePath: str = "output.txt"):
         with open(filePath, "r") as txt:
             line1 = txt.readline().split(" ") # width height
             for i in range(len(line1)):
                 line1[i] = int(line1[i])
-            self.w = line1[0]
-            self.h = line1[1]
+            self.w = int(line1[0])
+            self.h = int(line1[1])
+            self.uniList = [[0 for _ in range(self.w)] for _ in range(self.h)]
 
             line2 = int(txt.readline()) # Generations
-            self.generations = line2
+            self.generations = (line2)
 
             line3 = int(txt.readline()) # Living cells
-            self.living_Cells = line3
+            self.living_Cells = int(line3)
 
             line4 = txt.readline().split("],") # Alive coords
             self.living_Cell_Pos.clear()
             for i in range(len(line4)):
                 line4[i] = re.sub("[,\[\] ]", "", line4[i])
                 self.living_Cell_Pos.append([int(line4[i][0]),int(line4[i][1])])
+            for pos in self.living_Cell_Pos:
+                self.uniList[pos[1]][pos[0]] = 1
             
-    def outputFile(self):
-        with open("output.txt", "w") as txt:
+    def outputFile(self, outputFile: str = "output.txt"):
+        with open(outputFile, "w") as txt:
             livingCellPos = f"{self.living_Cell_Pos}"
             livingCellPos = livingCellPos[1:-1]
             txt.write(f"{self.w} {self.h}\n{self.generations}\n{self.living_Cells}\n{livingCellPos}")
@@ -110,41 +113,45 @@ class universe:
             self.uniList = uniListUpdates
             self.generations += 1
 
-
 if __name__ == "__main__":
     args = sys.argv
 
-    display = True
-    save = True
-    useInput = True
-    inputFile = "ConwayTester.txt" # "output.txt"
+    display = False
+    save = False
+    useInput = False
+    inputFile = "output.txt"
     outputFile = "output.txt"
-    generations = 10
+    generations = 0
 
     for arg in args: # Check and parse cmd arguments
         match arg:
             case "--save":
                 save = True
+                break
             case "--graphics":
                 display = True
+                break
             case "--output":
                 outputFile = args[args.index("--output") + 1] 
                 save = True
+                break
             case "--input":
                 inputFile = args[args.index("--input") + 1]
                 useInput = True
+                break
             case "--gen":
                 generations = int(args[args.index("--gen") + 1])
+                break
     
-    # print(f"display: {display}, output: {outputFile}, input: {inputFile}, gens: {generations}")
-
+    uni1 = universe() #Init default
     if useInput:
         uni1.inputFile(inputFile)
 
-    uni1 = universe() #Init default
-    uni1.startGenerations(generation=generations, display=display)
+    startTime = time.time()
+    uni1.startGenerations(generation=generations, display=display, speed=.5)
+    stopTime = time.time()
 
     if save:
-        uni1.outputFile()
+        uni1.outputFile(outputFile)
 
-# Haskell check it out, OCaml for functional programming
+    print(f"Completed in {(stopTime - startTime):.3f} seconds!!!")
