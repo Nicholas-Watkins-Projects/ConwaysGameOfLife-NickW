@@ -114,10 +114,11 @@ class universe:
 if __name__ == "__main__":
     args = sys.argv
 
-    display = False
-    save = False
+    display = True
+    save = True
+    useInput = True
+    inputFile = "ConwayTester.txt" # "output.txt"
     outputFile = "output.txt"
-    inputFile = "output.txt"
     generations = 10
 
     for arg in args: # Check and parse cmd arguments
@@ -131,14 +132,18 @@ if __name__ == "__main__":
                 save = True
             case "--input":
                 inputFile = args[args.index("--input") + 1]
+                useInput = True
             case "--gen":
                 generations = int(args[args.index("--gen") + 1])
     
     # print(f"display: {display}, output: {outputFile}, input: {inputFile}, gens: {generations}")
 
+    if useInput:
+        uni1.inputFile(inputFile)
+
     uni1 = universe() #Init default
-    uni1.startGenerations(generations, True)
-    
+    uni1.startGenerations(generation=generations, display=display)
+
     if save:
         uni1.outputFile()
 

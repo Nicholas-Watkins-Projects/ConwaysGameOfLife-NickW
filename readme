@@ -1,2 +1,12 @@
 uses g++ to compile
 python: 3.13
+
+For Python,
+```
+    python conway.py --arg
+    --save      | Save to default file, output.txt
+    --graphics  | Use graphics in terminal
+    --output    | specify output file and saves it
+    --input     | Use a starter input file
+    --gen       | Specify generations to run, default 10
+```
