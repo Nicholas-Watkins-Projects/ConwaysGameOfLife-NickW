@@ -1,6 +1,4 @@
-import pprint
-import __main__
-import re, os, sys, time
+import re, os, sys, time, tracemalloc
 
 class universe:
     w = 0
@@ -127,31 +125,30 @@ if __name__ == "__main__":
         match arg:
             case "--save":
                 save = True
-                break
             case "--graphics":
                 display = True
-                break
             case "--output":
                 outputFile = args[args.index("--output") + 1] 
                 save = True
-                break
             case "--input":
                 inputFile = args[args.index("--input") + 1]
                 useInput = True
-                break
             case "--gen":
                 generations = int(args[args.index("--gen") + 1])
-                break
     
     uni1 = universe() #Init default
     if useInput:
         uni1.inputFile(inputFile)
 
+    tracemalloc.start()
     startTime = time.time()
     uni1.startGenerations(generation=generations, display=display, speed=.5)
     stopTime = time.time()
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     if save:
         uni1.outputFile(outputFile)
 
     print(f"Completed in {(stopTime - startTime):.3f} seconds!!!")
+    print(f"Current MALLOC: {current}, Peak MALLOC: {peak}")

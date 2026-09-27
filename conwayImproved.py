@@ -1,6 +1,4 @@
-import pprint
-import __main__
-import re, os, sys, time
+import re, os, sys, time, tracemalloc
 
 class universe:
     w = 0
@@ -8,18 +6,8 @@ class universe:
     generations = 0
     living_Cells = 0
     living_Cell_Pos = []
-    uniList = []
-
-    def __init__(self, width = 14, height = 14, AliveList = [[1,2],[2,3],[3,3],[3,2],[3,1]]):
-        self.w = width
-        self.h = height
-        self.living_Cells = len(AliveList)
-        self.living_Cell_Pos = AliveList
-        self.uniList = [[0 for _ in range(width)] for _ in range(height)]
-        for pos in AliveList:
-            self.uniList[pos[1]][pos[0]] = 1
     
-    def show(self):
+    def show(self): # Need improvement ############ DOES NOT WORK #####################
         os.system("cls")
         for row in self.uniList:
             for i in row:
@@ -39,7 +27,6 @@ class universe:
                 line1[i] = int(line1[i])
             self.w = int(line1[0])
             self.h = int(line1[1])
-            self.uniList = [[0 for _ in range(self.w)] for _ in range(self.h)]
 
             line2 = int(txt.readline()) # Generations
             self.generations = (line2)
@@ -49,11 +36,9 @@ class universe:
 
             line4 = txt.readline().split("],") # Alive coords
             self.living_Cell_Pos.clear()
-            for i in range(len(line4)):
+            for i in range(len(line4)): # Make coords
                 line4[i] = re.sub("[,\[\] ]", "", line4[i])
                 self.living_Cell_Pos.append([int(line4[i][0]),int(line4[i][1])])
-            for pos in self.living_Cell_Pos:
-                self.uniList[pos[1]][pos[0]] = 1
             
     def outputFile(self, outputFile: str = "output.txt"):
         with open(outputFile, "w") as txt:
@@ -61,19 +46,14 @@ class universe:
             livingCellPos = livingCellPos[1:-1]
             txt.write(f"{self.w} {self.h}\n{self.generations}\n{self.living_Cells}\n{livingCellPos}")
     
-    def detect(self, x, y) -> int:
-        alive = 0
+    def detectMatrix(self, x, y) -> list:
         thingsToProcess = [[x-1, y-1], [x, y-1], [x+1, y-1],
-                           [x-1, y], [x+1, y],
+                           [x-1, y], [x, y], [x+1, y],
                            [x-1, y+1], [x, y+1], [x+1, y+1]]
 
-        for pos in thingsToProcess:
-            if not ((pos[0] <= -1 or pos[1] <= -1) or (pos[0] >= self.w or pos[1] >= self.h)):
-                if self.uniList[pos[1]][pos[0]] == 1:
-                    alive += 1
-        return alive
-    
-    def rules(self, aliveCount: int, alive: bool) -> int: # Using living cell count and uses conways rules to determine if cell lives (1) or dies (0)
+        return thingsToProcess
+    """    
+    def rules(self, repeats: int, alive: bool) -> int: # Using living cell count and uses conways rules to determine if cell lives (1) or dies (0)
         if alive and aliveCount < 2:
             return 0
         if alive and aliveCount > 3:
@@ -84,6 +64,7 @@ class universe:
             return 0
         if alive:
             return 1
+    """
 
     def startGenerations(self, generation: int, display: bool = False, speed: float = .2):
         for i in range(generation):
@@ -92,8 +73,39 @@ class universe:
                 self.show()
                 self.showStats()
                 time.sleep(speed)
+            
+            self.living_Cell_Pos.sort()
+            print(f"\nCells: {self.living_Cell_Pos} | Gen: {i}")
 
-            uniListUpdates = [[0 for _ in range(self.w)] for _ in range(self.h)]
+            thingsToProcess = []
+            for coord in self.living_Cell_Pos: # This makes 3x3 area to find repeats
+                test = self.detectMatrix(coord[0], coord[1])
+                thingsToProcess += test
+            thingsToProcess.sort() # This processes the repeats to a dictionary with how many repeats were found
+            thingsToProcess = [f"{thingsToProcess[i]}" for i in range(len(thingsToProcess))]
+            repeats = {i:thingsToProcess.count(i) for i in thingsToProcess}
+
+            cellsToRemove = []
+            for cell in self.living_Cell_Pos: # Checks living cell repeats and can kill it
+                # print(f"Cell repeats: {cell}: {repeats[f'{cell}']-1}") 
+                if repeats[f'{cell}']-1 > 3 or repeats[f'{cell}']-1 < 2:
+                    cellsToRemove.append(cell)
+                    repeats.pop(f'{cell}')
+                elif repeats[f'{cell}'] == 3:
+                    repeats.pop(f'{cell}')
+
+            for cell in cellsToRemove: # Kills all living cells that need to
+                self.living_Cell_Pos.remove(cell)
+            
+            for cell in list(repeats.keys()): # Should handled all alive cells by now, update dead cells
+                if repeats[cell] == 3: # Revive dead cells
+                    cell = re.sub("[\[\] ]", "", cell)
+                    cell = cell.split(",")
+                    cell = [int(cell[0]), int(cell[1])]
+                    self.living_Cell_Pos.append(cell)
+
+
+            """ # OLD CODE
             for y in range(self.h):
                 for x in range(self.w):
                     # Detect what cells live or die and update lists, then after, complete list conversion to update death and life
@@ -112,46 +124,46 @@ class universe:
                     uniListUpdates[y][x] = currentCell
             self.uniList = uniListUpdates
             self.generations += 1
+            """
 
 if __name__ == "__main__":
     args = sys.argv
 
     display = False
-    save = True
+    save = False
     useInput = True
-    inputFile = "ConwayTester.txt" # "output.txt"
-    outputFile = "output.txt"
-    generations = 10
+    inputFile = "output.txt"
+    outputFile = "output2.txt"
+    generations = 5
 
     for arg in args: # Check and parse cmd arguments
         match arg:
             case "--save":
                 save = True
-                break
             case "--graphics":
                 display = True
-                break
             case "--output":
                 outputFile = args[args.index("--output") + 1] 
                 save = True
-                break
             case "--input":
                 inputFile = args[args.index("--input") + 1]
                 useInput = True
-                break
             case "--gen":
                 generations = int(args[args.index("--gen") + 1])
-                break
     
     uni1 = universe() #Init default
     if useInput:
         uni1.inputFile(inputFile)
 
+    tracemalloc.start()
     startTime = time.time()
     uni1.startGenerations(generation=generations, display=display, speed=.5)
     stopTime = time.time()
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     if save:
         uni1.outputFile(outputFile)
 
-    print(f"Completed in {(stopTime - startTime):.3f} seconds!!!")
+    print(f"\n\nCompleted in {(stopTime - startTime):.3f} seconds!!!")
+    print(f"Current MALLOC: {current}, Peak MALLOC: {peak}")
