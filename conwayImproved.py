@@ -37,7 +37,8 @@ class universe:
             line4 = txt.readline().split("],") # Alive coords
             self.living_Cell_Pos.clear()
             for i in range(len(line4)): # Make coords
-                line4[i] = re.sub("[,\[\] ]", "", line4[i])
+                line4[i] = re.sub("[\[\] ]", "", line4[i])
+                line4[i] = line4[i].split(",")
                 self.living_Cell_Pos.append([int(line4[i][0]),int(line4[i][1])])
             
     def outputFile(self, outputFile: str = "output.txt"):
@@ -52,19 +53,6 @@ class universe:
                            [x-1, y+1], [x, y+1], [x+1, y+1]]
 
         return thingsToProcess
-    """    
-    def rules(self, repeats: int, alive: bool) -> int: # Using living cell count and uses conways rules to determine if cell lives (1) or dies (0)
-        if alive and aliveCount < 2:
-            return 0
-        if alive and aliveCount > 3:
-            return 0
-        if aliveCount == 3:
-            return 1
-        if not alive:
-            return 0
-        if alive:
-            return 1
-    """
 
     def startGenerations(self, generation: int, display: bool = False, speed: float = .2):
         for i in range(generation):
@@ -75,7 +63,7 @@ class universe:
                 time.sleep(speed)
             
             self.living_Cell_Pos.sort()
-            print(f"\nCells: {self.living_Cell_Pos} | Gen: {i}")
+            # print(f"\nCells: {self.living_Cell_Pos} | Gen: {i}")
 
             thingsToProcess = []
             for coord in self.living_Cell_Pos: # This makes 3x3 area to find repeats
@@ -104,6 +92,7 @@ class universe:
                     cell = [int(cell[0]), int(cell[1])]
                     self.living_Cell_Pos.append(cell)
 
+            self.generations += 1
 
             """ # OLD CODE
             for y in range(self.h):
@@ -130,10 +119,10 @@ if __name__ == "__main__":
     args = sys.argv
 
     display = False
-    save = False
+    save = True
     useInput = True
-    inputFile = "output.txt"
-    outputFile = "output2.txt"
+    inputFile = "output2.txt"
+    outputFile = "output3.txt"
     generations = 5
 
     for arg in args: # Check and parse cmd arguments
