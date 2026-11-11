@@ -10,3 +10,9 @@ For Python,
     --input     | Use a starter input file
     --gen       | Specify generations to run, default 10
 ```
+Files are set up as:
+
+8 8  -> Width Height
+0    -> Generations that have passed
+5    -> Living Cells
+[1, 2], [2, 3], [3, 3], [3, 2], [3, 1] -> Coordinates of each cell

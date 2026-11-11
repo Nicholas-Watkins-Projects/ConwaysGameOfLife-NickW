@@ -28,7 +28,7 @@ class universe:
             print("\n")
     
     def showStats(self):
-        print(f"Width: {self.w}\tHeight: {self.h}\nGenerations: {self.generations+1}\tLivingCellCount: {self.living_Cells}\nLivingCellPos:\n{self.living_Cell_Pos}")
+        print(f"Width: {self.w}\tHeight: {self.h}\nGenerations: {self.generations+1}\tLivingCellCount: {self.living_Cells}\nTime: {time.localtime()}")
 
     def inputFile(self, filePath: str = "output.txt"):
         with open(filePath, "r") as txt:
@@ -86,6 +86,8 @@ class universe:
     def startGenerations(self, generation: int, display: bool = False, speed: float = .2):
         for i in range(generation):
 
+            self.showStats()
+
             if display:
                 self.show()
                 self.showStats()
@@ -115,11 +117,11 @@ if __name__ == "__main__":
     args = sys.argv
 
     display = False
-    save = False
-    useInput = False
-    inputFile = "output.txt"
+    save = True
+    useInput = True
+    inputFile = "DenseSoup_CaseA.txt"
     outputFile = "output.txt"
-    generations = 0
+    generations = 200
 
     for arg in args: # Check and parse cmd arguments
         match arg:

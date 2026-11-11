@@ -7,18 +7,18 @@ class universe:
     living_Cells = 0
     living_Cell_Pos = []
     
-    def show(self): # Need improvement ############ DOES NOT WORK #####################
+    def show(self): # Decent, needs improvement tho
         os.system("cls")
-        for row in self.uniList:
-            for i in row:
-                if i == 0:
-                    print("_     ", end="")
+        for y in range(self.h):
+            for x in range(self.w):
+                if ([x, y]) in self.living_Cell_Pos:
+                    print("X_ _ _", end="")
                 else:
-                    print("X     ", end="")
+                    print(" _ _ _", end="")
             print("\n")
-    
+
     def showStats(self):
-        print(f"Width: {self.w}\tHeight: {self.h}\nGenerations: {self.generations+1}\tLivingCellCount: {self.living_Cells}\nLivingCellPos:\n{self.living_Cell_Pos}")
+        print(f"Width: {self.w}\tHeight: {self.h}\nGenerations: {self.generations+1}\tLivingCellCount: {self.living_Cells}\nTime: {time.localtime()}")
 
     def inputFile(self, filePath: str = "output.txt"):
         with open(filePath, "r") as txt:
@@ -57,11 +57,16 @@ class universe:
     def startGenerations(self, generation: int, display: bool = False, speed: float = .2):
         for i in range(generation):
 
-            if display:
+            self.showStats()
+
+            if display: 
                 self.show()
                 self.showStats()
                 time.sleep(speed)
-            
+
+            if self.living_Cells <= 0: # Kills generations if complete death
+                break
+
             self.living_Cell_Pos.sort()
             # print(f"\nCells: {self.living_Cell_Pos} | Gen: {i}")
 
@@ -86,44 +91,22 @@ class universe:
                 self.living_Cell_Pos.remove(cell)
             
             for cell in list(repeats.keys()): # Should handled all alive cells by now, update dead cells
-                if repeats[cell] == 3: # Revive dead cells
-                    cell = re.sub("[\[\] ]", "", cell)
-                    cell = cell.split(",")
-                    cell = [int(cell[0]), int(cell[1])]
+                cell = re.sub("[\[\] ]", "", cell)
+                cell = cell.split(",")
+                cell = [int(cell[0]), int(cell[1])]
+                if repeats[f'{cell}'] == 3 and (cell[1] <= self.h-1) and (cell[1] >= 0) and (cell[0] <= self.w-1) and (cell[0] >= 0): # Revive dead cells and boundary detect
                     self.living_Cell_Pos.append(cell)
 
             self.generations += 1
-
-            """ # OLD CODE
-            for y in range(self.h):
-                for x in range(self.w):
-                    # Detect what cells live or die and update lists, then after, complete list conversion to update death and life
-                    detected = self.detect(x, y)
-                    currentCell = self.rules(detected, self.uniList[y][x]==1)
-
-                    if currentCell == 1: # Alive
-                        if not self.living_Cell_Pos.__contains__([x,y]):
-                            self.living_Cell_Pos.append([x,y])
-                            self.living_Cells += 1
-                    else: # Dead
-                        if self.living_Cell_Pos.__contains__([x,y]):
-                            self.living_Cell_Pos.remove([x,y])
-                            self.living_Cells -= 1
-
-                    uniListUpdates[y][x] = currentCell
-            self.uniList = uniListUpdates
-            self.generations += 1
-            """
 
 if __name__ == "__main__":
     args = sys.argv
 
     display = False
     save = True
-    useInput = True
-    inputFile = "output2.txt"
-    outputFile = "output3.txt"
-    generations = 5
+    inputFile = "DenseSoup_CaseA.txt"
+    outputFile = "DenseOutput.txt"
+    generations = 200
 
     for arg in args: # Check and parse cmd arguments
         match arg:
@@ -141,12 +124,11 @@ if __name__ == "__main__":
                 generations = int(args[args.index("--gen") + 1])
     
     uni1 = universe() #Init default
-    if useInput:
-        uni1.inputFile(inputFile)
+    uni1.inputFile(inputFile)
 
     tracemalloc.start()
     startTime = time.time()
-    uni1.startGenerations(generation=generations, display=display, speed=.5)
+    uni1.startGenerations(generation=generations, display=display, speed=.1)
     stopTime = time.time()
     current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
