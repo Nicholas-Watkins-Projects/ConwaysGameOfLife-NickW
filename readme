@@ -16,3 +16,5 @@ Files are set up as:
 0    -> Generations that have passed
 5    -> Living Cells
 [1, 2], [2, 3], [3, 3], [3, 2], [3, 1] -> Coordinates of each cell
+
+Project was made for class at ETSU Fall 2026
